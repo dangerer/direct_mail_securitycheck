@@ -17,12 +17,19 @@ namespace DirectMailTeam\DirectMail;
 
 use DirectMailTeam\DirectMail\Repository\SysDmailRepository;
 use DirectMailTeam\DirectMail\Utility\DmRegistryUtility;
+use DirectMailTeam\DirectMail\Utility\FetchUtility;
+use DirectMailTeam\DirectMail\Utility\RdctUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Resource\FileRepository;
+use TYPO3\CMS\Core\Site\SiteFinder;
+use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
@@ -55,7 +62,16 @@ class DirectMailUtility
      */
     public static function getLanguageService(): LanguageService
     {
-        return $GLOBALS['LANG'];
+        return GeneralUtility::makeInstance(LanguageServiceFactory::class)->createFromUserPreferences(self::getBackendUser());
+    }
+
+    /**
+     * Returns the Backend User
+     * @return BackendUserAuthentication
+     */
+    public static function getBackendUser(): BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'];
     }
 
     /**
@@ -82,6 +98,17 @@ class DirectMailUtility
     ): string {
         $typolinkPageUrl = 't3://page?uid=';
         $cObj = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? new \TYPO3\CMS\Core\Http\ServerRequest();
+        $pageId = (int)$parameter;
+        if ($pageId > 0 && !$request->getAttribute('site')) {
+            try {
+                $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($pageId);
+                $request = $request->withAttribute('site', $site);
+            } catch (\Throwable) {
+                // Ignore if site not found
+            }
+        }
+        $cObj->setRequest($request);
 
         return $cObj->typolink_URL([
             'parameter' => $typolinkPageUrl . $parameter,
@@ -101,6 +128,7 @@ class DirectMailUtility
      */
     public static function fetchUrlContentsForDirectMailRecord(array $row, array $params, $returnArray = false)
     {
+        $lllFile = 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf';
         $lang = self::getLanguageService();
         $output = '';
         $errorMsg = [];
@@ -135,12 +163,12 @@ class DirectMailUtility
         $htmlmail->setIncludeMedia($row['includeMedia']);
 
         if ($urls['plainTextUrl']) {
-            $mailContent = GeneralUtility::getURL(self::addUserPass($urls['plainTextUrl'], $params));
+            $mailContent = GeneralUtility::makeInstance(FetchUtility::class)->getContents(self::addUserPass($urls['plainTextUrl'], $params));
             $htmlmail->addPlain($mailContent);
             if (!$mailContent || !$htmlmail->getPartPlainConfig('content')) {
-                $errorMsg[] = $lang->getLL('dmail_no_plain_content');
+                $errorMsg[] = $lang->sL($lllFile . ':dmail_no_plain_content');
             } elseif (!strstr($htmlmail->getPartPlainConfig('content'), '<!--DMAILER_SECTION_BOUNDARY')) {
-                $warningMsg[] = $lang->getLL('dmail_no_plain_boundaries');
+                $warningMsg[] = $lang->sL($lllFile . ':dmail_no_plain_boundaries');
             }
         }
 
@@ -166,11 +194,11 @@ class DirectMailUtility
                 }
             }
             if ($htmlmail->extractFramesInfo()) {
-                $errorMsg[] = $lang->getLL('dmail_frames_not allowed');
+                $errorMsg[] = $lang->sL($lllFile . ':dmail_frames_not allowed');
             } elseif (!$success || !$htmlmail->getPartHtmlConfig('content')) {
-                $errorMsg[] = $lang->getLL('dmail_no_html_content');
+                $errorMsg[] = $lang->sL($lllFile . ':dmail_no_html_content');
             } elseif (!strstr($htmlmail->getPartHtmlConfig('content'), '<!--DMAILER_SECTION_BOUNDARY')) {
-                $warningMsg[] = $lang->getLL('dmail_no_html_boundaries');
+                $warningMsg[] = $lang->sL($lllFile . ':dmail_no_html_boundaries');
             }
         }
 
@@ -195,7 +223,7 @@ class DirectMailUtility
                     $output .= $flashMessageRendererResolver
                         ->resolve()
                         ->render([
-                            self::createFlashMessage($warning, $lang->getLL('dmail_warning'), FlashMessage::WARNING, false),
+                            self::createFlashMessage($warning, $lang->sL($lllFile . ':dmail_warning'), ContextualFeedbackSeverity::WARNING, false),
                         ]);
                 }
             }
@@ -205,7 +233,7 @@ class DirectMailUtility
                 $output .= $flashMessageRendererResolver
                     ->resolve()
                     ->render([
-                        self::createFlashMessage($error, $lang->getLL('dmail_error'), FlashMessage::ERROR, false),
+                        self::createFlashMessage($error, $lang->sL($lllFile . ':dmail_error'), ContextualFeedbackSeverity::ERROR, false),
                     ]);
             }
         }
@@ -220,18 +248,30 @@ class DirectMailUtility
         return $output;
     }
 
+    /**
+        https://api.typo3.org/main/class_t_y_p_o3_1_1_c_m_s_1_1_core_1_1_messaging_1_1_abstract_message.html
+        const 	NOTICE = -2
+        const 	INFO = -1
+        const 	OK = 0
+        const 	WARNING = 1
+        const 	ERROR = 2
+     * @param string $messageText
+     * @param string $messageHeader
+     * @param ContextualFeedbackSeverity $messageType
+     * @param bool $storeInSession
+     */
     protected static function createFlashMessage(
         string $messageText,
-        string $messageHeader = '',
-        int $messageType = 0,
-        bool $storeInSession = false
-    ): FlashMessage {
+        string $messageHeader,
+        ContextualFeedbackSeverity $messageType,
+        bool $storeInSession = false): FlashMessage
+    {
         return GeneralUtility::makeInstance(
             FlashMessage::class,
             $messageText,
-            $messageHeader,
-            $messageType,
-            $storeInSession
+            $messageHeader, // [optional] the header
+            $messageType, // [optional] the severity defaults to \TYPO3\CMS\Core\Messaging\FlashMessage::OK
+            $storeInSession // [optional] whether the message should be stored in the session or only in the \TYPO3\CMS\Core\Messaging\FlashMessageQueue object (default is false)
         );
     }
 
@@ -274,7 +314,7 @@ class DirectMailUtility
     public static function getFullUrlsForDirectMailRecord(array $row): array
     {
         // Finding the domain to use
-        if (!$_SERVER['HTTP_HOST']) {
+        if (empty($_SERVER['HTTP_HOST'])) {
             // In CLI / Scheduler context, $_SERVER['HTTP_HOST'] can be null
             $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
             $site = $siteFinder->getSiteByPageId((int)$row['page']);
@@ -305,7 +345,7 @@ class DirectMailUtility
                 $result['plainTextUrl'] = '';
             } else {
                 $urlParts = @parse_url($result['plainTextUrl']);
-                if (!$urlParts['scheme']) {
+                if (!($urlParts['scheme'] ?? null)) {
                     $result['plainTextUrl'] = 'http://' . $result['plainTextUrl'];
                 }
             }
@@ -317,7 +357,7 @@ class DirectMailUtility
                 $result['htmlUrl'] = '';
             } else {
                 $urlParts = @parse_url($result['htmlUrl']);
-                if (!$urlParts['scheme']) {
+                if (!($urlParts['scheme'] ?? null)) {
                     $result['htmlUrl'] = 'http://' . $result['htmlUrl'];
                 }
             }
@@ -352,33 +392,24 @@ class DirectMailUtility
      * @see makeRedirectUrl()
      * @deprecated since TYPO3 CMS 7, will be removed in TYPO3 CMS 8. Use mailer API instead
      */
-    public static function substUrlsInPlainText(string $message, string $urlmode = '76', string $index_script_url = '')
+    public static function substUrlsInPlainText(string $message, string $urlmode = '76', string $index_script_url = ''): string
     {
-        switch ($urlmode) {
-            case '':
-                $lengthLimit = false;
-                break;
-            case 'all':
-                $lengthLimit = 0;
-                break;
-            case '76':
+        $rdctUtility = GeneralUtility::makeInstance(RdctUtility::class);
+        if (!$rdctUtility->installed()) {
+            return $message;
+        }
 
-            default:
-                $lengthLimit = (int)$urlmode;
-        }
-        if ($lengthLimit === false) {
-            // No processing
-            $messageSubstituted = $message;
-        } else {
-            $messageSubstituted = preg_replace_callback(
-                '/(http|https):\\/\\/.+(?=[\\]\\.\\?]*([\\! \'"()<>]+|$))/iU',
-                function (array $matches) use ($lengthLimit, $index_script_url) {
-                    $redirects = GeneralUtility::makeInstance(\FoT3\Rdct\Redirects::class);
-                    return $redirects->makeRedirectUrl($matches[0], $lengthLimit, $index_script_url);
-                },
-                $message
-            );
-        }
+        $lengthLimit = $urlmode === 'all' ? 0 :(int)$urlmode;
+        //$pattern = '/(http|https):\\/\\/.+(?=[\\]\\.\\?]*([\\! \'"()<>]+|$))/iU';
+        // https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s02.html
+        $pattern = '/\b((https?):\/\/|(www)\.)[-A-Z0-9+&@#\/%?=~_|$!:,.;]*[A-Z0-9+&@#\/%=~_|$]/i';
+        $messageSubstituted = preg_replace_callback(
+            $pattern,
+            function (array $matches) use ($rdctUtility, $lengthLimit, $index_script_url) {
+                return $rdctUtility->getRedirects()->makeRedirectUrl($matches[0], $lengthLimit, $index_script_url);
+            },
+            $message
+        );
         return $messageSubstituted;
     }
 

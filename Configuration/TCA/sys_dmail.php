@@ -15,7 +15,7 @@ return [
     ],
     'columns' => [
         'sys_language_uid' => [
-            'exclude' => 1,
+            'exclude' => true,
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.language',
             'config' => [
                 'type' => 'language',
@@ -23,18 +23,19 @@ return [
         ],
         'subject' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.subject',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:subject.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
                 'max' => '120',
-                'eval' => 'trim,required',
+                'required' => true,
             ],
         ],
         'page' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.page',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:page.details',
             'config' => [
                 'type' => 'group',
-                'internal_type' => 'db',
                 'allowed' => 'pages',
                 'size' => '1',
                 'maxitems' => 1,
@@ -43,101 +44,105 @@ return [
         ],
         'from_email' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.from_email',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:from_email.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
                 'max' => '80',
-                'eval' => 'trim,required',
+                'required' => true,
             ],
         ],
         'from_name' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.from_name',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:from_name.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
-                'eval' => 'trim',
                 'max' => '80',
             ],
         ],
         'replyto_email' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.replyto_email',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:replyto_email.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
-                'eval' => 'trim',
                 'max' => '80',
             ],
         ],
         'replyto_name' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.replyto_name',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:replyto_name.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
-                'eval' => 'trim',
                 'max' => '80',
             ],
         ],
         'return_path' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.return_path',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:return_path.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
-                'eval' => 'trim',
                 'max' => '80',
             ],
         ],
         'organisation' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.organisation',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:organisation.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
-                'eval' => 'trim',
                 'max' => '80',
             ],
         ],
         'encoding' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.transfer_encoding',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:encoding.details',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
                 'items' => [
-                    ['quoted-printable', 'quoted-printable'],
-                    ['base64', 'base64'],
-                    ['8bit', '8bit'],
+                    ['label' => 'quoted-printable', 'value' => 'quoted-printable'],
+                    ['label' => 'base64', 'value' => 'base64'],
+                    ['label' => '8bit', 'value' => '8bit'],
                 ],
                 'default' => 'quoted-printable',
             ],
         ],
         'charset' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.charset',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:charset.details',
             'config' => [
                 'type' => 'input',
                 'size' => '15',
                 'max' => '20',
-                'eval' => 'trim',
                 'default' => 'iso-8859-1',
             ],
         ],
         'priority' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.priority',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:priority.details',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
                 'items' => [
-                    ['LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.priority.I.0', '5'],
-                    ['LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.priority.I.1', '3'],
-                    ['LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.priority.I.2', '1'],
+                    ['label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.priority.I.0', 'value' => '5'],
+                    ['label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.priority.I.1', 'value' => '3'],
+                    ['label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.priority.I.2', 'value' => '1'],
                 ],
                 'default' => '3',
             ],
         ],
         'sendOptions' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.sendOptions',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:sendOptions.details',
             'config' => [
                 'type' => 'check',
                 'items' => [
-                    ['LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.sendOptions.I.0', ''],
-                    ['LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.sendOptions.I.1', ''],
+                    ['label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.sendOptions.I.0', 'value' => ''],
+                    ['label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.sendOptions.I.1', 'value' => ''],
                 ],
                 'cols' => '2',
                 'default' => '3',
@@ -145,6 +150,7 @@ return [
         ],
         'includeMedia' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.includeMedia',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:includeMedia.details',
             'config' => [
                 'type' => 'check',
                 'default' => '0',
@@ -152,6 +158,7 @@ return [
         ],
         'flowedFormat' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.flowedFormat',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:flowedFormat.details',
             'config' => [
                 'type' => 'check',
                 'default' => '0',
@@ -159,27 +166,27 @@ return [
         ],
         'HTMLParams' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.HTMLParams',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:HTMLParams.details',
             'config' => [
                 'type' => 'input',
                 'size' => '15',
                 'max' => '80',
-                'eval' => 'trim',
                 'default' => '',
             ],
         ],
         'plainParams' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.plainParams',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:plainParams.details',
             'config' => [
                 'type' => 'input',
                 'size' => '15',
                 'max' => '80',
-                'eval' => 'trim',
                 'default' => '&type=99',
             ],
         ],
         'issent' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.issent',
-            'exclude' => '1',
+            'exclude' => true,
             'config' => [
                 'type' => 'none',
                 'size' => 2,
@@ -187,10 +194,10 @@ return [
         ],
         'scheduled' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.scheduled',
-            'exclude' => '1',
+            'exclude' => true,
             'config' => [
                 'type' => 'none',
-                'cols' => '30',
+                'size' => '30',
                 'format' => 'datetime',
                 'default' => 0,
             ],
@@ -199,7 +206,7 @@ return [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.scheduled_begin',
             'config' => [
                 'type' => 'none',
-                'cols' => '15',
+                'size' => '15',
                 'format' => 'datetime',
                 'default' => 0,
             ],
@@ -208,13 +215,14 @@ return [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.scheduled_end',
             'config' => [
                 'type' => 'none',
-                'cols' => '15',
+                'size' => '15',
                 'format' => 'datetime',
                 'default' => 0,
             ],
         ],
         'use_rdct' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.use_rdct',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:use_rdct.details',
             'config' => [
                 'type' => 'check',
                 'default' => '0',
@@ -222,76 +230,61 @@ return [
         ],
         'long_link_rdct_url' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.long_link_rdct_url',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:long_link_rdct_url.details',
             'config' => [
                 'type' => 'input',
                 'size' => '15',
                 'max' => '80',
-                'eval' => 'trim',
                 'default' => '',
             ],
         ],
         'long_link_mode' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.long_link_mode',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:long_link_mode.details',
             'config' => [
                 'type' => 'check',
             ],
         ],
         'authcode_fieldList' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.authcode_fieldList',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:authcode_fieldList.details',
             'config' => [
                 'type' => 'input',
                 'size' => '30',
-                'eval' => 'trim',
                 'max' => '80',
                 'default' => 'uid,name,email,password',
             ],
         ],
         'renderedsize' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.renderedsize',
-            'exclude' => '1',
+            'exclude' => true,
             'config' => [
                 'type' => 'none',
             ],
         ],
         'attachment' => [
             'label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.attachment',
-            'config' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getFileFieldTCAConfig(
-                'attachment',
-                [
-                    'maxitems' => 5,
-                    'appearance' => [
-                        'createNewRelationLinkTitle' => 'LLL:EXT:frontend/locallang_ttc.xlf:images.addFileReference',
-                    ],
-                    // custom configuration for displaying fields in the overlay/reference table
-                    // to use the image overlay palette instead of the basic overlay palette
-                    'overrideChildTca' => [
-                        'types' => [
-                            '0' => [
-                                'showitem' => '
-                                    --palette--;LLL:EXT:core/Resources/Private/Language/locallang_tca.xlf:sys_file_reference.imageoverlayPalette;imageoverlayPalette,
-                                    --palette--;;filePalette',
-                            ],
-                            \TYPO3\CMS\Core\Resource\File::FILETYPE_TEXT => [
-                                'showitem' => '
-                                    --palette--;LLL:EXT:core/Resources/Private/Language/locallang_tca.xlf:sys_file_reference.imageoverlayPalette;imageoverlayPalette,
-                                    --palette--;;filePalette',
-                            ],
-                        ],
-                    ],
-                ],
-                $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']
-            ),
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:attachment.details',
+            'config' => [
+                'type' => 'file',
+                'maxitems' => 5,
+                'allowed' => 'common-image-types',
+                'appearance' => [
+                    'fileByUrlAllowed' => false,
+                ]
+            ]
         ],
         'type' => [
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.type',
+            'description' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf:type.details',
             'config' => [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
                 'items' => [
-                    ['LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.type.I.0', '0'],
-                    ['LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.type.I.1', '1'],
-                    ['Draft of internal page', '2'],
-                    ['Draft of external URL', '3'],
+                    ['label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.type.I.0', 'value' => '0'],
+                    ['label' => 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_tca.xlf:sys_dmail.type.I.1', 'value' => '1'],
+                    ['label' => 'Draft of internal page', 'value' => '2'],
+                    ['label' => 'Draft of external URL', 'value' => '3'],
                 ],
                 'default' => '0',
             ],

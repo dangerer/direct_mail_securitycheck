@@ -1,6 +1,6 @@
 <?php
 
-//https://docs.typo3.org/m/typo3/reference-coreapi/11.5/en-us/ApiOverview/Icon/Index.html
+// https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ApiOverview/Icon/Index.html
 return [
     // icon identifier
     'directmail-attachment' => [
@@ -53,19 +53,32 @@ return [
         'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\BitmapIconProvider::class,
         'source' => 'EXT:direct_mail/Resources/Public/Icons/preview_txt.png',
     ],
-/**
-    'mysvgicon' => [
-        // icon provider class
+    'directmail-module' => [
         'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
-        // the source SVG for the SvgIconProvider
-        'source' => 'EXT:my_extension/Resources/Public/Icons/mysvg.svg',
+        'source' => 'EXT:direct_mail/Resources/Public/Images/module-directmail.svg',
     ],
-    'myfontawesomeicon' => [
-        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\FontawesomeIconProvider::class,
-        // the fontawesome icon name
-        'name' => 'spinner',
-        // all icon providers provide the possibility to register an icon that spins
-        'spinning' => true,
+    'directmail-module-configuration' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:direct_mail/Resources/Public/Images/module-directmail-configuration.svg',
     ],
-*/
+    'directmail-module-directmail' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:direct_mail/Resources/Public/Images/module-directmail-directmail.svg',
+    ],
+    'directmail-module-mailer-engine' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:direct_mail/Resources/Public/Images/module-directmail-mailer-engine.svg',
+    ],
+    'directmail-module-recipient-list' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:direct_mail/Resources/Public/Images/module-directmail-recipient-list.svg',
+    ],
+    'directmail-module-importer' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:direct_mail/Resources/Public/Images/module-directmail-importer.svg',
+    ],
+    'directmail-module-statistics' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:direct_mail/Resources/Public/Images/module-directmail-statistics.svg',
+    ],
 ];

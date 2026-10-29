@@ -12,6 +12,11 @@ The extension provides several scheduler tasks to let integrators control when a
 
 - https://packagist.org/packages/directmailteam/direct-mail
 
+After updating the extension, clear TYPO3's compiled dependency-injection cache
+using **Admin Tools > Maintenance > Flush TYPO3 and PHP Cache**, or
+`vendor/bin/typo3 cache:flush` in Composer installations. Clearing only frontend
+page caches does not rebuild the service container.
+
 ## Documentation and support
 
 -  **Documentation**

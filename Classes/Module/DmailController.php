@@ -1658,8 +1658,9 @@ final class DmailController extends MainController
                         }
 
                         if ($table) {
-                            $queryGenerator = GeneralUtility::makeInstance(DmQueryGenerator::class, $this->iconFactory, GeneralUtility::makeInstance(UriBuilder::class), $this->moduleTemplateFactory);
-                            $idLists[$table] = GeneralUtility::makeInstance(TempRepository::class)->getSpecialQueryIdList($queryGenerator, $table, $mailGroup);
+                            $queryGenerator = GeneralUtility::makeInstance(DmQueryGenerator::class);
+                            $queryGenerator->setSettings($this->MOD_SETTINGS);
+                            $idLists[$table] = GeneralUtility::makeInstance(TempRepository::class)->getSpecialQueryIdList($queryGenerator, $table, $mailGroup, $this->request);
                         }
                         break;
                     case 4:

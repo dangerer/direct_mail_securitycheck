@@ -10,6 +10,10 @@ services:
   DirectMailTeam\DirectMail\Middleware\SimulateUsergroup:
     public: true
 
+  DirectMailTeam\DirectMail\DmQueryGenerator:
+    public: true
+    shared: false
+
   DirectMailTeam\DirectMail\Module\ConfigurationController:
     tags: ['backend.controller']
   DirectMailTeam\DirectMail\Module\DmailController:

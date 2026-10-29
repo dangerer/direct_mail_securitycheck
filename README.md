@@ -12,6 +12,11 @@ The extension provides several scheduler tasks to let integrators control when a
 
 - https://packagist.org/packages/directmailteam/direct-mail
 
+TYPO3's **lowlevel** system extension must be installed and active for special
+recipient queries. Composer installations install it through the declared
+`typo3/cms-lowlevel` dependency. TYPO3 14 uses `QuerySearchController` for these
+queries; the former `DatabaseIntegrityController` no longer exists.
+
 After updating the extension, clear TYPO3's compiled dependency-injection cache
 using **Admin Tools > Maintenance > Flush TYPO3 and PHP Cache**, or
 `vendor/bin/typo3 cache:flush` in Composer installations. Clearing only frontend

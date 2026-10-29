@@ -15,11 +15,11 @@ namespace DirectMailTeam\DirectMail;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Doctrine\DBAL\Exception as DBALException;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Lowlevel\Database\QueryGenerator;
-use TYPO3\CMS\Lowlevel\Controller\DatabaseIntegrityController;
+use TYPO3\CMS\Lowlevel\Controller\QuerySearchController;
 
 /**
  * Used to generate queries for selecting users in the database
@@ -27,9 +27,14 @@ use TYPO3\CMS\Lowlevel\Controller\DatabaseIntegrityController;
  * @author		Kasper Skårhøj <kasper@typo3.com>
  * @author		Stanislas Rolland <stanislas.rolland(arobas)fructifor.ca>
  */
-class DmQueryGenerator extends DatabaseIntegrityController
+class DmQueryGenerator extends QuerySearchController
 {
     protected array $allowedTables = ['tt_address', 'fe_users'];
+
+    public function setSettings(array $settings): void
+    {
+        $this->MOD_SETTINGS = $settings;
+    }
 
     public function mkTableSelect(string $name, string $cur): string
     {
@@ -83,13 +88,12 @@ class DmQueryGenerator extends DatabaseIntegrityController
                 $selectQueryString = $this->getSelectQuery($queryString);
                 $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($this->table);
 
-                $isConnectionMysql = strpos($connection->getServerVersion(), 'MySQL') === 0;
                 $fullQueryString = '';
                 try {
                     $fullQueryString = $selectQueryString;
                     $dataRows = $connection->executeQuery($selectQueryString)->fetchAllAssociative();
                     //$output .= '<h2>SQL query</h2><div><code>' . htmlspecialchars($fullQueryString) . '</code></div>';
-                    $cPR = $this->getQueryResultCode($mQ, $dataRows, $this->table);
+                    $cPR = $this->getQueryResultCode($mQ, $dataRows, $this->table, $request);
                     $output .= '<h2>' . ($cPR['header'] ?? '') . '</h2><div>' . $cPR['content'] . '</div>';
                 } catch (DBALException $e) {
                     $output .= '<h2>SQL query</h2><div><code>' . htmlspecialchars($fullQueryString) . '</code></div>';
@@ -103,16 +107,16 @@ class DmQueryGenerator extends DatabaseIntegrityController
         return ['<div class="database-query-builder">' . $output . '</div>', $selectQueryString];
     }
 
-    public function getQueryDM(bool $queryLimitDisabled): string
+    public function getQueryDM(bool $queryLimitDisabled, ServerRequestInterface $request): string
     {
         $selectQueryString = '';
-        $this->init('queryConfig', $this->settings['queryTable'] ?? '', '', $this->settings);
+        $this->init('queryConfig', $this->MOD_SETTINGS['queryTable'] ?? '', '', $this->MOD_SETTINGS);
         if ($this->formName) {
             $this->setFormName($this->formName);
         }
-        $tmpCode = $this->makeSelectorTable($this->settings, 'query,limit');
+        $this->makeSelectorTable($this->MOD_SETTINGS, $request);
         if ($this->table && is_array($GLOBALS['TCA'][$this->table])) {
-            if ($this->settings['search_query_makeQuery']) {
+            if ($this->MOD_SETTINGS['search_query_makeQuery'] ?? false) {
                 // Show query
                 $this->enablePrefix = true;
                 $queryString = $this->getQuery($this->queryConfig);

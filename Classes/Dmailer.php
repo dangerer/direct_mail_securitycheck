@@ -1207,7 +1207,7 @@ class Dmailer implements LoggerAwareInterface
                 $hrefData['subst_str'] = $quotes . $hrefData['ref'] . $quotes;
                 if ($hrefData['ref'] && substr(trim($hrefData['ref']), 0, 1) != '#' && !strstr($linkList, '|' . $hrefData['subst_str'] . '|')) {
                     $linkList .= '|' . $hrefData['subst_str'] . '|';
-                    $hrefData['absRef'] = $this->absRef($hrefData['ref']);
+                    $hrefData['absRef'] = $this->removeHttpCredentials($this->absRef($hrefData['ref']));
                     $hrefData['tag'] = $tag;
                     $hrefData['no_jumpurl'] = (int)(trim(($attributes['no_jumpurl'] ?? ''), '"')) ? 1 : 0;
                     $this->theParts['html']['hrefs'][] = $hrefData;
@@ -1226,7 +1226,7 @@ class Dmailer implements LoggerAwareInterface
                 $hrefData['subst_str'] = $hrefData['quotes'] . $hrefData['ref'] . $hrefData['quotes'];
                 if (!strstr($linkList, '|' . $hrefData['subst_str'] . '|')) {
                     $linkList .= '|' . $hrefData['subst_str'] . '|';
-                    $hrefData['absRef'] = $this->absRef($hrefData['ref']);
+                    $hrefData['absRef'] = $this->removeHttpCredentials($this->absRef($hrefData['ref']));
                     $this->theParts['html']['hrefs'][] = $hrefData;
                 }
             }
@@ -1237,9 +1237,18 @@ class Dmailer implements LoggerAwareInterface
         $this->extractMediaLinks();
         foreach ($this->theParts['html']['media'] as $mediaData) {
             if (($mediaData['use_jumpurl'] ?? false) === 1) {
+                $mediaData['absRef'] = $this->removeHttpCredentials($mediaData['absRef']);
                 $this->theParts['html']['hrefs'][$mediaData['ref']] = $mediaData;
             }
         }
+    }
+
+    /**
+     * Keep fetch authentication out of recipient links and stored tracking targets.
+     */
+    protected function removeHttpCredentials(string $url): string
+    {
+        return preg_replace('~^(https?://)[^/?#]*@~i', '$1', $url);
     }
 
     /**

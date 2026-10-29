@@ -487,6 +487,16 @@ various functions of the Direct Mail module.
 
          Note: The password is NOT sent in the mail!
 
+         Authentication credentials are retained for server-side content and
+         embedded-media fetching, but removed from generated recipient links
+         and their stored tracking targets, including links with
+         ``no_jumpurl="1"``.
+
+         After updating from an affected version, fetch newsletter content
+         again before sending queued newsletters. Previously generated content
+         and tracking targets are not rewritten automatically. If newsletters
+         have already exposed these credentials, rotate them.
+
          Note: If you do not specify a username and password and a newsletter
          page happens to be protected, an error will occur and no mail content
          will be fetched.

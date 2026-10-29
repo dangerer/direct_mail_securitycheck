@@ -17,6 +17,7 @@ namespace DirectMailTeam\DirectMail\Module;
  * The TYPO3 project - inspiring people to share!
  */
 
+use DirectMailTeam\DirectMail\DirectMailUtility;
 use DirectMailTeam\DirectMail\Event\ImporterOutputEvent;
 use DirectMailTeam\DirectMail\Repository\PagesRepository;
 use DirectMailTeam\DirectMail\Repository\SysDmailCategoryRepository;
@@ -29,7 +30,6 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Charset\CharsetConverter;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
@@ -933,21 +933,19 @@ final class ImporterController extends MainController
      * @param array $data Contains values to convert
      *
      * @return	array	array of charset-converted values
-     * @see \TYPO3\CMS\Core\Charset\CharsetConverter::conv[]
      */
     public function convCharset(array $data): array
     {
         $dbCharset = 'utf-8';
         if ($dbCharset != $this->indata['charset']) {
-            $converter = GeneralUtility::makeInstance(CharsetConverter::class);
             foreach ($data as $k => $v) {
                 if(is_array($v)) {
                     foreach($v as $k2 => $val) {
-                        $data[$k][$k2] = $converter->conv($val, strtolower($this->indata['charset']), $dbCharset);
+                        $data[$k][$k2] = DirectMailUtility::convertCharset($val, strtolower($this->indata['charset']), $dbCharset);
                     }
                 }
                 else {
-                    $data[$k] = $converter->conv($v, strtolower($this->indata['charset']), $dbCharset);
+                    $data[$k] = DirectMailUtility::convertCharset($v, strtolower($this->indata['charset']), $dbCharset);
                 }
             }
         }
@@ -975,7 +973,7 @@ final class ImporterController extends MainController
             $refInfo = parse_url($this->getHttpReferer());
             $httpHost = $this->getRequestHostOnly();
 
-            if ($httpHost != ($refInfo['host'] ?? '') && empty($GLOBALS['TYPO3_CONF_VARS']['SYS']['doNotCheckReferer'])) {
+            if ($httpHost != $refInfo['host'] && !$GLOBALS['TYPO3_CONF_VARS']['SYS']['doNotCheckReferer']) {
                 $this->beUser->writeLog(SystemLogType::FILE, 0, 2, 1, 'Referer host "%s" and server host "%s" did not match!', [$refInfo['host'], $httpHost]);
             } else {
                 // new file
@@ -1023,7 +1021,7 @@ final class ImporterController extends MainController
         $refInfo = parse_url($this->getHttpReferer());
         $httpHost = $this->getRequestHostOnly();
 
-        if ($httpHost != ($refInfo['host'] ?? '') && empty($GLOBALS['TYPO3_CONF_VARS']['SYS']['doNotCheckReferer'])) {
+        if ($httpHost != $refInfo['host'] && !$GLOBALS['TYPO3_CONF_VARS']['SYS']['doNotCheckReferer']) {
             $this->beUser->writeLog(SystemLogType::FILE, 0, 2, 1, 'Referer host "%s" and server host "%s" did not match!', [$refInfo['host'], $httpHost]);
         } else {
             $extendedFileUtility->start($this->csvFile);

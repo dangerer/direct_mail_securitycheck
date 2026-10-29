@@ -412,7 +412,7 @@ final class DmailController extends MainController
 
                         // add attachment here, since attachment added in 2nd step
                         $unserializedMailContent = unserialize(base64_decode($row['mailContent'] ?: ''));
-                        $temp = $this->compileQuickMail($row, $unserializedMailContent['plain']['content'] ?? '');
+                        $temp = $this->compileQuickMail($row, $unserializedMailContent['plain']['content'] ?? '', false);
                         if ($temp['errorTitle']) {
                             $this->flashMessageQueue->addMessage($this->createFlashMessage($temp['errorText'], $temp['errorTitle'], ContextualFeedbackSeverity::ERROR, false));
                         }
@@ -637,7 +637,7 @@ final class DmailController extends MainController
                     $plainIcon = $this->iconFactory->getIcon('directmail-dmail-preview-text', IconSize::SMALL, $langIconOverlay);
                     $createIcon = $this->iconFactory->getIcon('directmail-dmail-new', IconSize::SMALL, $langIconOverlay);
 
-                    $attributes = PreviewUriBuilder::create((int)$row['uid'])
+                    $attributes = PreviewUriBuilder::create($row['uid'], '')
                         ->withRootLine(BackendUtility::BEgetRootLine($row['uid']))
                         //->withSection('')
                         ->withAdditionalQueryParameters($htmlParams)
@@ -652,7 +652,7 @@ final class DmailController extends MainController
 
                     $previewHTMLLink .= '<a ' . $serializedAttributes . '>' . $htmlIcon . '</a>';
 
-                    $attributes = PreviewUriBuilder::create((int)$row['uid'])
+                    $attributes = PreviewUriBuilder::create($row['uid'], '')
                         ->withRootLine(BackendUtility::BEgetRootLine($row['uid']))
                         //->withSection('')
                         ->withAdditionalQueryParameters($plainParams)
@@ -783,7 +783,6 @@ final class DmailController extends MainController
             '',
             trim($GLOBALS['TCA']['sys_dmail']['ctrl']['default_sortby'])
         );
-        $ascDesc = 'ASC';
         if (!empty($sOrder)) {
             if (substr_count($sOrder, 'ASC') > 0) {
                 $sOrder = trim(str_replace('ASC', '', $sOrder));
@@ -1831,7 +1830,6 @@ final class DmailController extends MainController
                     'icon' => $this->iconFactory->getIconForRecord('tt_content', $row, IconSize::SMALL),
                     'header' => $row['header'],
                     'CType' => $row['CType'],
-                    'list_type' => $row['list_type'],
                     'bodytext' => empty($row['bodytext']) ? '' : GeneralUtility::fixed_lgd_cs(strip_tags($row['bodytext']), 200),
                     'color' => $row['module_sys_dmail_category'] ? 'red' : 'green',
                     'labelOnlyAll' => $row['module_sys_dmail_category'] ? $this->languageService->sL($this->lllFile . ':nl_l_ONLY') : $this->languageService->sL($this->lllFile . ':nl_l_ALL'),

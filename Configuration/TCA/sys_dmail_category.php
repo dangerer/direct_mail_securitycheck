@@ -63,6 +63,7 @@ return [
             'config' => [
                 'type' => 'input',
                 'size' => '2',
+                'eval' => 'trim',
                 'max' => '2',
             ],
         ],

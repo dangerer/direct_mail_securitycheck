@@ -53,7 +53,6 @@ final class StatisticsController extends MainController
         protected bool $access = false,
 
         protected string $requestUri = '',
-        public string $output = '',
 
         private int $uid = 0,
         private string $table = '',
@@ -313,7 +312,6 @@ final class StatisticsController extends MainController
      */
     protected function displayUserInfo(): array
     {
-        $data = [];
         if ($this->submit) {
             if (count($this->indata) < 1) {
                 $this->indata['html'] = 0;
@@ -625,13 +623,11 @@ final class StatisticsController extends MainController
         arsort($urlCounter['plain']);
         reset($urlCounter['total']);
 
-        $htmlLinks = [];
-        $html = false;
-
         // HTML mails
         if ((int)($row['sendOptions']) & 0x2) {
             $htmlContent = $unpackedMail['html']['content'];
 
+            $htmlLinks = [];
             if (is_array($unpackedMail['html']['hrefs'])) {
                 foreach ($unpackedMail['html']['hrefs'] as $jumpurlId => $data) {
                     $htmlLinks[$jumpurlId] = [
@@ -729,7 +725,7 @@ final class StatisticsController extends MainController
         // go through all links that were not clicked yet and that have a label
         $clickedLinks = array_keys($urlCounter['total']);
         foreach ($urlArr as $id => $link) {
-            if (!in_array($id, $clickedLinks) && (isset($htmlLinks[$id]))) {
+            if (!in_array($id, $clickedLinks) && (isset($htmlLinks['id']))) {
                 // a link to this host?
                 $uParts = @parse_url($link);
                 $urlstr = $this->getUrlStr($uParts);
@@ -1553,7 +1549,6 @@ final class StatisticsController extends MainController
         if (is_array($urlParts) && isset($urlParts['host']) && $this->siteUrl == $urlParts['host']) {
             $m = [];
             // do we have an id?
-            $uid = 0;
             if (preg_match('/(?:^|&)id=([0-9a-z_]+)/', $urlParts['query'], $m)) {
                 $isInt = MathUtility::canBeInterpretedAsInteger($m[1]);
                 if ($isInt) {

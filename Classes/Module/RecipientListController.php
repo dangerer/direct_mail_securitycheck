@@ -67,7 +67,7 @@ final class RecipientListController extends MainController
         protected array $indata = [],
 
 
-        protected string $requestUri = '',
+        protected $requestUri = '',
 
         protected array $allowedTables = [DmailRecipientEnum::TtAddress->value, DmailRecipientEnum::FeUsers->value],
 
@@ -249,11 +249,9 @@ final class RecipientListController extends MainController
     protected function compileMailGroup(int $groupUid): array
     {
         $idLists = [];
-        $mailGroup = [];
         if ($groupUid) {
-            $mailGroupRecord = BackendUtility::getRecord('sys_dmail_group', $groupUid);
-            if (is_array($mailGroupRecord) && $mailGroupRecord['pid'] == $this->id) {
-                $mailGroup = $mailGroupRecord;
+            $mailGroup = BackendUtility::getRecord('sys_dmail_group', $groupUid);
+            if (is_array($mailGroup) && $mailGroup['pid'] == $this->id) {
                 switch ($mailGroup['type']) {
                     case 0:
                         // From pages
@@ -732,7 +730,6 @@ final class RecipientListController extends MainController
      */
     protected function displayUserInfo(): array
     {
-        $dataout = [];
         if (!in_array($this->table, [DmailRecipientEnum::TtAddress->value, DmailRecipientEnum::FeUsers->value])) {
             return [];
         }

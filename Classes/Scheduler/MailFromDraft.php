@@ -37,7 +37,7 @@ class MailFromDraft extends AbstractTask
 {
     public int $draftUid = 0;
 
-    public int $dmailUid = 0;
+    protected int $dmailUid = 0;
 
     protected array $hookObjects = [];
 
@@ -64,12 +64,9 @@ class MailFromDraft extends AbstractTask
             $hookParams = [];
 
             $draftRecord = BackendUtility::getRecord('sys_dmail', $this->draftUid);
-            if (!is_array($draftRecord)) {
-                return false;
-            }
 
             // update recipients
-            $recipientGroups = explode(',', (string)($draftRecord['recipientGroups'] ?? ''));
+            $recipientGroups = explode(',', $draftRecord['recipientGroups']);
             $dmailController = GeneralUtility::makeInstance(DmailController::class);
 
             $newRecipients = $dmailController->cmd_compileMailGroup($recipientGroups);

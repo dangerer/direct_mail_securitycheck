@@ -21,14 +21,12 @@ use DirectMailTeam\DirectMail\Utility\FetchUtility;
 use DirectMailTeam\DirectMail\Utility\RdctUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Resource\FileRepository;
-use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -98,17 +96,6 @@ class DirectMailUtility
     ): string {
         $typolinkPageUrl = 't3://page?uid=';
         $cObj = GeneralUtility::makeInstance(ContentObjectRenderer::class);
-        $request = $GLOBALS['TYPO3_REQUEST'] ?? new \TYPO3\CMS\Core\Http\ServerRequest();
-        $pageId = (int)$parameter;
-        if ($pageId > 0 && !$request->getAttribute('site')) {
-            try {
-                $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($pageId);
-                $request = $request->withAttribute('site', $site);
-            } catch (\Throwable) {
-                // Ignore if site not found
-            }
-        }
-        $cObj->setRequest($request);
 
         return $cObj->typolink_URL([
             'parameter' => $typolinkPageUrl . $parameter,
@@ -314,7 +301,7 @@ class DirectMailUtility
     public static function getFullUrlsForDirectMailRecord(array $row): array
     {
         // Finding the domain to use
-        if (empty($_SERVER['HTTP_HOST'])) {
+        if (!$_SERVER['HTTP_HOST']) {
             // In CLI / Scheduler context, $_SERVER['HTTP_HOST'] can be null
             $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
             $site = $siteFinder->getSiteByPageId((int)$row['page']);
@@ -378,6 +365,24 @@ class DirectMailUtility
         int $zeroValue = 0
     ): int {
         return MathUtility::forceIntegerInRange($theInt, $min, $max, $zeroValue);
+    }
+
+    /**
+     * Converts a string between character sets.
+     */
+    public static function convertCharset(string $value, string $fromCharset, string $toCharset): string
+    {
+        $fromCharset = strtolower($fromCharset);
+        $toCharset = strtolower($toCharset);
+        if ($fromCharset === $toCharset) {
+            return $value;
+        }
+
+        try {
+            return mb_convert_encoding($value, $toCharset, $fromCharset);
+        } catch (\ValueError) {
+            return $value;
+        }
     }
 
     /**

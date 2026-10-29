@@ -12,12 +12,12 @@ namespace DirectMailTeam\DirectMail\Utility;
 
 use DirectMailTeam\DirectMail\Repository\TempRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Scheduler\Exception\InvalidTaskException;
+use TYPO3\CMS\Scheduler\ProgressProviderInterface;
 use TYPO3\CMS\Scheduler\Service\TaskService;
 use TYPO3\CMS\Scheduler\Task\AbstractTask;
 use TYPO3\CMS\Scheduler\Task\TaskSerializer;
 use TYPO3\CMS\Scheduler\Validation\Validator\TaskValidator;
-use TYPO3\CMS\Scheduler\ProgressProviderInterface;
-use TYPO3\CMS\Scheduler\Exception\InvalidTaskException;
 
 class SchedulerUtility
 {
@@ -29,7 +29,7 @@ class SchedulerUtility
     public static function getDMTable(): array
     {
         $taskSerializer = GeneralUtility::makeInstance(TaskSerializer::class);
-        $registeredClasses = GeneralUtility::makeInstance(TaskService::class)->getAvailableTaskTypes();
+        $taskService = GeneralUtility::makeInstance(TaskService::class);
 
         $tasks = GeneralUtility::makeInstance(TempRepository::class)->getDMTasks();
 
@@ -47,7 +47,7 @@ class SchedulerUtility
                 ];
 
                 try {
-                    $taskObject = $taskSerializer->deserialize($task['serialized_task_object']);
+                    $taskObject = $taskSerializer->deserialize($task);
                 } catch (InvalidTaskException $e) {
                     $taskData['errorMessage'] = $e->getMessage();
                     $taskData['class'] = $taskSerializer->extractClassName($task['serialized_task_object']);
@@ -55,7 +55,7 @@ class SchedulerUtility
                     continue;
                 }
 
-                $taskClass = $taskSerializer->resolveClassName($taskObject);
+                $taskClass = get_class($taskObject);
                 $taskData['class'] = $taskClass;
 
                 if (!self::isValidTaskObject($taskObject)) {
@@ -64,8 +64,9 @@ class SchedulerUtility
                     continue;
                 }
 
-                if (!isset($registeredClasses[$taskClass])) {
-                    $taskData['errorMessage'] = 'The class ' . $taskClass . ' is not a registered task';
+                $taskInformation = $taskService->getTaskDetailsFromTask($taskObject);
+                if ($taskInformation === null) {
+                    $taskData['errorMessage'] = 'The task ' . $taskObject->getTaskType() . ' is not a registered task';
                     $errorClasses[] = $taskData;
                     continue;
                 }
@@ -73,18 +74,8 @@ class SchedulerUtility
                 if ($taskObject instanceof ProgressProviderInterface) {
                     $taskData['progress'] = round((float)$taskObject->getProgress(), 2);
                 }
-
-                if (!isset($registeredClasses[$taskClass])) {
-                    $taskData['errorMessage'] = 'The class ' . $taskClass . ' is not a registered task';
-                    $errorClasses[] = $taskData;
-                    continue;
-                }
-
-                if ($taskObject instanceof ProgressProviderInterface) {
-                    $taskData['progress'] = round((float)$taskObject->getProgress(), 2);
-                }
-                $taskData['classTitle'] = $registeredClasses[$taskClass]['title'];
-                $taskData['classExtension'] = $registeredClasses[$taskClass]['extension'];
+                $taskData['classTitle'] = $taskInformation['title'];
+                $taskData['classExtension'] = $taskInformation['category'];
                 $taskData['additionalInformation'] = $taskObject->getAdditionalInformation();
                 $taskData['disabled'] = (bool)$task['disable'];
                 $taskData['isRunning'] = !empty($task['serialized_executions']);
@@ -95,7 +86,7 @@ class SchedulerUtility
                     $taskData['type'] = 'recurring';
                     $taskData['frequency'] = $taskObject->getExecution()->getCronCmd() ?: $taskObject->getExecution()->getInterval();
                 }
-                $taskData['multiple'] = (bool)$taskObject->getExecution()->getMultiple();
+                $taskData['multiple'] = (bool)$taskObject->getExecution()->isParallelExecutionAllowed();
                 $taskData['lastExecutionFailure'] = false;
                 if (!empty($task['lastexecution_failure'])) {
                     $taskData['lastExecutionFailure'] = true;

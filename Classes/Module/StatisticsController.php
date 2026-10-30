@@ -680,8 +680,8 @@ final class StatisticsController extends MainController
 
                 $label = '<span title="';
                 // no title attribute
-                $label .= !empty($title) ? $title : $targetUrl;
-                $label .= '">' . GeneralUtility::fixed_lgd_cs(substr($targetUrl, -40), 40) . '</span>';
+                $label .= htmlspecialchars(!empty($title) ? $title : $targetUrl);
+                $label .= '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs(substr($targetUrl, -40), 40)) . '</span>';
 
                 $htmlLinks[$jumpurlId]['label'] = $label;
             }
@@ -701,7 +701,7 @@ final class StatisticsController extends MainController
             $urlstr = $this->getUrlStr($uParts);
 
             $label = $this->getLinkLabel($url, $urlstr, false, $htmlLinks[$id]['label'] ?? '');
-            $img = '<a href="' . $urlstr . '" target="_blank">' . $iconAppsToolbarMenuSearch . '</a>';
+            $img = '<a href="' . htmlspecialchars($urlstr) . '" target="_blank">' . $iconAppsToolbarMenuSearch . '</a>';
 
             if (isset($urlCounter['html'][$id]['plainId'])) {
                 $tblLines[] = [
@@ -735,7 +735,7 @@ final class StatisticsController extends MainController
                 $uParts = @parse_url($link);
                 $urlstr = $this->getUrlStr($uParts);
 
-                $label = $htmlLinks[$id]['label'] . ' (' . ($urlstr ? $urlstr : '/') . ')';
+                $label = $htmlLinks[$id]['label'] . ' (' . htmlspecialchars($urlstr ? $urlstr : '/') . ')';
                 $img = '<a href="' . htmlspecialchars($link) . '" target="_blank">' . $iconAppsToolbarMenuSearch . '</a>';
                 $tblLines[] = [
                     $label,
@@ -885,7 +885,7 @@ final class StatisticsController extends MainController
                 }
                 if (count($idLists['PLAINLIST'])) {
                     $tables[6]['returnList']['PLAINLIST'] = [
-                        'PLAINLIST' => implode('</li><li>', $idLists['PLAINLIST']),
+                        'PLAINLIST' => implode('</li><li>', array_map('htmlspecialchars', $idLists['PLAINLIST'])),
                     ];
                 }
             }
@@ -949,7 +949,7 @@ final class StatisticsController extends MainController
                 }
                 if (count($idLists['PLAINLIST'])) {
                     $tables[6]['unknownList']['PLAINLIST'] = [
-                        'PLAINLIST' => implode('</li><li>', $idLists['PLAINLIST']),
+                        'PLAINLIST' => implode('</li><li>', array_map('htmlspecialchars', $idLists['PLAINLIST'])),
                     ];
                 }
             }
@@ -1013,7 +1013,7 @@ final class StatisticsController extends MainController
                 }
                 if (count($idLists['PLAINLIST'])) {
                     $tables[6]['fullList']['PLAINLIST'] = [
-                        'PLAINLIST' => implode('</li><li>', $idLists['PLAINLIST']),
+                        'PLAINLIST' => implode('</li><li>', array_map('htmlspecialchars', $idLists['PLAINLIST'])),
                     ];
                 }
             }
@@ -1077,7 +1077,7 @@ final class StatisticsController extends MainController
                 }
                 if (count($idLists['PLAINLIST'])) {
                     $tables[6]['badHostList']['PLAINLIST'] = [
-                        'PLAINLIST' => implode('</li><li>', $idLists['PLAINLIST']),
+                        'PLAINLIST' => implode('</li><li>', array_map('htmlspecialchars', $idLists['PLAINLIST'])),
                     ];
                 }
             }
@@ -1143,7 +1143,7 @@ final class StatisticsController extends MainController
                 }
                 if (count($idLists['PLAINLIST'])) {
                     $tables[6]['badHeaderList']['PLAINLIST'] = [
-                        'PLAINLIST' => implode('</li><li>', $idLists['PLAINLIST']),
+                        'PLAINLIST' => implode('</li><li>', array_map('htmlspecialchars', $idLists['PLAINLIST'])),
                     ];
                 }
             }
@@ -1208,7 +1208,7 @@ final class StatisticsController extends MainController
                 }
                 if (count($idLists['PLAINLIST'])) {
                     $tables[6]['reasonUnknownList']['PLAINLIST'] = [
-                        'PLAINLIST' => implode('</li><li>', $idLists['PLAINLIST']),
+                        'PLAINLIST' => implode('</li><li>', array_map('htmlspecialchars', $idLists['PLAINLIST'])),
                     ];
                 }
             }
@@ -1634,7 +1634,7 @@ final class StatisticsController extends MainController
                 $elementUid = (int)(substr($urlParts['fragment'], 1));
                 $row = BackendUtility::getRecord('tt_content', $elementUid);
                 if ($row) {
-                    $contentTitle = BackendUtility::getRecordTitle('tt_content', $row, false, true);
+                    $contentTitle = htmlspecialchars((string)BackendUtility::getRecordTitle('tt_content', $row, false, true));
                 }
             } else {
                 $contentTitle = $this->getLinkLabel($url, $urlStr, true);
@@ -1648,12 +1648,12 @@ final class StatisticsController extends MainController
             $content = GeneralUtility::makeInstance(FetchUtility::class)->getContents($url);
             if (is_string($content) && preg_match('/\<\s*title\s*\>(.*)\<\s*\/\s*title\s*\>/i', $content, $matches)) {
                 // get the page title
-                $contentTitle = GeneralUtility::fixed_lgd_cs(trim($matches[1]), 50);
+                $contentTitle = htmlspecialchars(GeneralUtility::fixed_lgd_cs(trim($matches[1]), 50));
             } else {
                 // file?
                 // https://api.typo3.org/main/_general_utility_8php_source.html
                 $file = GeneralUtility::split_fileref($url);
-                $contentTitle = $file['file'];
+                $contentTitle = htmlspecialchars((string)$file['file']);
             }
 
         }
@@ -1675,7 +1675,7 @@ final class StatisticsController extends MainController
 
         // Fallback to url
         if ($label === '') {
-            $label = $url;
+            $label = htmlspecialchars($url);
         }
 
         if (isset($this->implodedParams['maxLabelLength']) && ($this->implodedParams['maxLabelLength'] > 0)) {

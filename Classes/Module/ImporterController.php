@@ -1078,7 +1078,10 @@ final class ImporterController extends MainController
         $defaultUploadFolderResolver = GeneralUtility::makeInstance(DefaultUploadFolderResolver::class);
         /** @var \TYPO3\CMS\Core\Resource\Folder $folder */
         $folder = $defaultUploadFolderResolver->resolve($this->beUser);
-        return $folder->getPublicUrl();
+        if (!is_object($folder)) {
+            return '';
+        }
+        return (string)$folder->getPublicUrl();
     }
 
     /**

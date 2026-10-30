@@ -532,7 +532,7 @@ final class StatisticsController extends MainController
         $plainUrlsTable = $sysDmailMaillogRepository->selectMostPopularLinks($row['uid'], 2);
 
         // Find urls:
-        $unpackedMail = unserialize(base64_decode($row['mailContent']));
+        $unpackedMail = unserialize(base64_decode($row['mailContent']), ['allowed_classes' => false]);
         // this array will include a unique list of all URLs that are used in the mailing
         $urlArr = [];
 
@@ -1330,7 +1330,7 @@ final class StatisticsController extends MainController
     protected function countTotalRecipientFromQueryInfo(string $queryInfo): int
     {
         $totalRecip = 0;
-        $idLists = unserialize($queryInfo);
+        $idLists = unserialize($queryInfo, ['allowed_classes' => false]);
         if (is_array($idLists)) {
             foreach ($idLists['id_lists'] as $idArray) {
                 $totalRecip += count($idArray);

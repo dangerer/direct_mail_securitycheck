@@ -108,6 +108,7 @@ final class StatisticsController extends MainController
         $this->currentPageNumber = $this->currentPageNumber > 0 ? $this->currentPageNumber : 1;
 
         $permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->perms_clause = $permsClause;
         $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
         $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
         $this->access = is_array($this->pageinfo) ? true : false;
@@ -360,7 +361,11 @@ final class StatisticsController extends MainController
         }
 
         $row = $rows[0] ?? [];
+        if ($row !== [] && !$this->canReadRecord($this->table, $row)) {
+            $row = [];
+        }
 
+        $data = [];
         if (is_array($row) && count($row)) {
             $categories = '';
 

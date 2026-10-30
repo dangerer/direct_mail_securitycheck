@@ -88,6 +88,7 @@ final class ImporterController extends MainController
 
         $this->id = (int)($parsedBody['id'] ?? $this->queryParams['id'] ?? 0);
         $permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->perms_clause = $permsClause;
         $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
         $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
         $this->access = is_array($this->pageinfo) ? true : false;

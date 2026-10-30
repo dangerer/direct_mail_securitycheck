@@ -121,6 +121,7 @@ final class DmailController extends MainController
         $this->updatePageTree = (bool)($parsedBody['updatePageTree'] ?? $queryParams['updatePageTree'] ?? false);
 
         $permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->perms_clause = $permsClause;
         $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
         $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
         $this->access = is_array($this->pageinfo);
@@ -259,7 +260,7 @@ final class DmailController extends MainController
 
         $row = [];
         if ((int)$this->sys_dmail_uid) {
-            $row = BackendUtility::getRecord('sys_dmail', $this->sys_dmail_uid);
+            $row = $this->getAccessibleRecord('sys_dmail', $this->sys_dmail_uid);
             $isExternalDirectMailRecord = (is_array($row) && $row['type'] == 1);
         }
 
@@ -393,7 +394,7 @@ final class DmailController extends MainController
                         $this->flashMessageQueue->addMessage($this->createFlashMessage($temp['warningText'], $temp['warningTitle'], ContextualFeedbackSeverity::WARNING, false));
                     }
 
-                    $row = BackendUtility::getRecord('sys_dmail', $this->sys_dmail_uid);
+                    $row = $this->getAccessibleRecord('sys_dmail', $this->sys_dmail_uid);
 
                     $data['info']['quickmail']['cmd'] = DmailCmdEnum::SendTest->value;
                     $data['info']['quickmail']['senderName'] = htmlspecialchars($quickmail['senderName'] ?? '');
@@ -946,6 +947,9 @@ final class DmailController extends MainController
     protected function deleteDMail(int $uid): void
     {
         $table = 'sys_dmail';
+        if (!$this->getBackendUser()->check('tables_modify', $table) || $this->getAccessibleRecord($table, $uid) === []) {
+            return;
+        }
         if ($GLOBALS['TCA'][$table]['ctrl']['delete']) {
             GeneralUtility::makeInstance(SysDmailRepository::class)->updateSysDmailRecord($uid, [$GLOBALS['TCA'][$table]['ctrl']['delete'] => 1]);
         }

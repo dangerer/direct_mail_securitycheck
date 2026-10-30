@@ -700,7 +700,7 @@ final class StatisticsController extends MainController
             $uParts = @parse_url($url);
             $urlstr = $this->getUrlStr($uParts);
 
-            $label = $this->getLinkLabel($url, $urlstr, false, $htmlLinks[$id]['label']);
+            $label = $this->getLinkLabel($url, $urlstr, false, $htmlLinks[$id]['label'] ?? '');
             $img = '<a href="' . $urlstr . '" target="_blank">' . $iconAppsToolbarMenuSearch . '</a>';
 
             if (isset($urlCounter['html'][$id]['plainId'])) {

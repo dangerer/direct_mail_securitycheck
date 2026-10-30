@@ -497,7 +497,7 @@
         <f:format.raw>{dataUserInfo.iconActionsOpen}</f:format.raw>
         <b><f:translate key="{lll}dmail_edit" /></b>
     </a>
-    <f:form method="post" name="dmailform" enctype="multipart/form-data">
+    <form action="" method="post" name="dmailform" enctype="multipart/form-data">
         <div style="padding-top: 20px;"></div>
         <h3><f:translate key="{lll}subscriber_profile" /></h3>
         <f:translate key="{lll}subscriber_profile_instructions" />
@@ -515,7 +515,7 @@
         <input type="hidden" name="cmd" value="{dataUserInfo.cmd}">
         <br>
         <input type="submit" value="{f:translate(key: '{lll}subscriber_profile_update')}">
-    </f:form>
+    </form>
 </f:section>
 
 <f:section name="returnConfig">

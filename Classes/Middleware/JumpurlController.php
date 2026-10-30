@@ -123,6 +123,10 @@ class JumpurlController implements MiddlewareInterface
 
                 if ($this->isAllowedJumpUrlTarget($jumpurl)) {
                     $this->responseType = self::RESPONSE_TYPE_URL;
+                } else {
+                    // never sign (juHash) and forward a target that was not explicitly allowed
+                    $jumpurl = '';
+                    unset($queryParamsToPass['jumpurl'], $queryParamsToPass['juHash']);
                 }
 
                 // to count the dmailerping correctly, we need something unique

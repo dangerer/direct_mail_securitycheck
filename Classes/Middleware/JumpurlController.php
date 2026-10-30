@@ -99,20 +99,20 @@ class JumpurlController implements MiddlewareInterface
 
                 $jumpurl = $this->getTargetUrl((int)$jumpurl);
 
-                // try to build the ready-to-use target url
-                if (!empty($this->recipientRecord)) {
-                    $valid = AuthCodeUtility::validateAuthCode($submittedAuthCode, $this->recipientRecord, ($this->directMailRecord['authcode_fieldList'] ?: 'uid'));
-                    if (!$valid) {
-                        throw new \Exception(
-                            'authCode verification failed.',
-                            1376899631
-                        );
-                    }
-
-                    $jumpurl = $this->substituteMarkersFromTargetUrl($jumpurl);
-
-                    $this->performFeUserAutoLogin();
+                // the link target is only released for an existing recipient with a matching authCode
+                $valid = !empty($this->recipientRecord)
+                    && AuthCodeUtility::validateAuthCode($submittedAuthCode, $this->recipientRecord, ($this->directMailRecord['authcode_fieldList'] ?: 'uid'));
+                if (!$valid) {
+                    throw new \Exception(
+                        'authCode verification failed.',
+                        1376899631
+                    );
                 }
+
+                // try to build the ready-to-use target url
+                $jumpurl = $this->substituteMarkersFromTargetUrl($jumpurl);
+
+                $this->performFeUserAutoLogin();
                 // jumpUrl generation failed. Early exit here
                 if (empty($jumpurl)) {
                     die('Error: No further link. Please report error to the mail sender.');

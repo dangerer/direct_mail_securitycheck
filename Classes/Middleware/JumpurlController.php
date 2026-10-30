@@ -29,6 +29,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Crypto\HashService;
+use TYPO3\CMS\Core\RateLimiter\RateLimiterFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -144,7 +145,7 @@ class JumpurlController implements MiddlewareInterface
                     'rid'           => $rid ?? $submittedAuthCode,
                 ];
                 $sysDmailMaillogRepository = GeneralUtility::makeInstance(SysDmailMaillogRepository::class);
-                if ($sysDmailMaillogRepository->hasRecentLog($mailLogParams) === false) {
+                if ($this->isTrackingAllowed() && $sysDmailMaillogRepository->hasRecentLog($mailLogParams) === false) {
                     $sysDmailMaillogRepository->insertForJumpurl($mailLogParams);
                 }
             }
@@ -331,6 +332,24 @@ class JumpurlController implements MiddlewareInterface
     protected function calculateJumpUrlHash(string $targetUrl): string
     {
         return GeneralUtility::makeInstance(HashService::class)->hmac($targetUrl, 'jumpurl');
+    }
+
+    /**
+     * Limits the number of tracking events one client can create, so statistics can not be flooded.
+     * The limiter can be tuned via $GLOBALS['TYPO3_CONF_VARS']['SYS']['rateLimiter']['directmail-tracking'].
+     */
+    protected function isTrackingAllowed(): bool
+    {
+        $limiter = GeneralUtility::makeInstance(RateLimiterFactory::class)->createRequestBasedLimiter(
+            $this->request,
+            [
+                'id' => 'directmail-tracking',
+                'policy' => 'sliding_window',
+                'limit' => 300,
+                'interval' => '10 minutes',
+            ]
+        );
+        return $limiter->consume()->isAccepted();
     }
 
     /**

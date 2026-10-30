@@ -1270,9 +1270,9 @@ class Dmailer implements LoggerAwareInterface
                 // Fetches the attributes for the tag
                 $attributes = $this->get_tag_attributes($reg[0]);
                 $info[] = [
-                    'src' => $attributes['src'],
-                    'name' => $attributes['name'],
-                    'absRef' => $this->absRef($frame['src']),
+                    'src' => $attributes['src'] ?? '',
+                    'name' => $attributes['name'] ?? '',
+                    'absRef' => $this->absRef($attributes['src'] ?? ''),
                 ];
             }
 

@@ -454,8 +454,7 @@ final class RecipientListController extends MainController
     protected function displayMailGroup(array $result): array
     {
         $idLists = $result['queryInfo']['id_lists'];
-        $group = BackendUtility::getRecord('sys_dmail_group', $this->group_uid);
-        $group = is_array($group) ? $group : [];
+        $group = $this->getAccessibleRecord('sys_dmail_group', $this->group_uid);
         $data = [
             'queryLimitDisabled' => $group['queryLimitDisabled'] ?? true,
             'group_id' => $this->group_uid,

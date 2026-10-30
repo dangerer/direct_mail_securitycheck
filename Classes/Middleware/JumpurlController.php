@@ -381,7 +381,7 @@ class JumpurlController implements MiddlewareInterface
         }
 
         // relative path inside the public directory, e.g. "typo3conf/ext/direct_mail/dmailerping.gif"
-        if (str_starts_with($target, '//') || str_contains($target, '\\') || str_contains($target, '://')) {
+        if (str_starts_with($target, '//') || !preg_match('#^[A-Za-z0-9_./-]+$#', $target)) {
             return false;
         }
         $checkPath = Environment::getPublicPath() . '/' . ltrim($target, '/');

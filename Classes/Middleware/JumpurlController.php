@@ -29,6 +29,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Crypto\HashService;
+use TYPO3\CMS\Core\RateLimiter\RateLimiterFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -99,20 +100,20 @@ class JumpurlController implements MiddlewareInterface
 
                 $jumpurl = $this->getTargetUrl((int)$jumpurl);
 
-                // try to build the ready-to-use target url
-                if (!empty($this->recipientRecord)) {
-                    $valid = AuthCodeUtility::validateAuthCode($submittedAuthCode, $this->recipientRecord, ($this->directMailRecord['authcode_fieldList'] ?: 'uid'));
-                    if (!$valid) {
-                        throw new \Exception(
-                            'authCode verification failed.',
-                            1376899631
-                        );
-                    }
-
-                    $jumpurl = $this->substituteMarkersFromTargetUrl($jumpurl);
-
-                    $this->performFeUserAutoLogin();
+                // the link target is only released for an existing recipient with a matching authCode
+                $valid = !empty($this->recipientRecord)
+                    && AuthCodeUtility::validateAuthCode($submittedAuthCode, $this->recipientRecord, ($this->directMailRecord['authcode_fieldList'] ?: 'uid'));
+                if (!$valid) {
+                    throw new \Exception(
+                        'authCode verification failed.',
+                        1376899631
+                    );
                 }
+
+                // try to build the ready-to-use target url
+                $jumpurl = $this->substituteMarkersFromTargetUrl($jumpurl);
+
+                $this->performFeUserAutoLogin();
                 // jumpUrl generation failed. Early exit here
                 if (empty($jumpurl)) {
                     die('Error: No further link. Please report error to the mail sender.');
@@ -123,6 +124,10 @@ class JumpurlController implements MiddlewareInterface
 
                 if ($this->isAllowedJumpUrlTarget($jumpurl)) {
                     $this->responseType = self::RESPONSE_TYPE_URL;
+                } else {
+                    // never sign (juHash) and forward a target that was not explicitly allowed
+                    $jumpurl = '';
+                    unset($queryParamsToPass['jumpurl'], $queryParamsToPass['juHash']);
                 }
 
                 // to count the dmailerping correctly, we need something unique
@@ -140,7 +145,7 @@ class JumpurlController implements MiddlewareInterface
                     'rid'           => $rid ?? $submittedAuthCode,
                 ];
                 $sysDmailMaillogRepository = GeneralUtility::makeInstance(SysDmailMaillogRepository::class);
-                if ($sysDmailMaillogRepository->hasRecentLog($mailLogParams) === false) {
+                if ($this->isTrackingAllowed() && $sysDmailMaillogRepository->hasRecentLog($mailLogParams) === false) {
                     $sysDmailMaillogRepository->insertForJumpurl($mailLogParams);
                 }
             }
@@ -330,6 +335,24 @@ class JumpurlController implements MiddlewareInterface
     }
 
     /**
+     * Limits the number of tracking events one client can create, so statistics can not be flooded.
+     * The limiter can be tuned via $GLOBALS['TYPO3_CONF_VARS']['SYS']['rateLimiter']['directmail-tracking'].
+     */
+    protected function isTrackingAllowed(): bool
+    {
+        $limiter = GeneralUtility::makeInstance(RateLimiterFactory::class)->createRequestBasedLimiter(
+            $this->request,
+            [
+                'id' => 'directmail-tracking',
+                'policy' => 'sliding_window',
+                'limit' => 300,
+                'interval' => '10 minutes',
+            ]
+        );
+        return $limiter->consume()->isAccepted();
+    }
+
+    /**
      * Checks if the target is allowed to be given to jumpurl
      *
      * @param string $target
@@ -339,21 +362,30 @@ class JumpurlController implements MiddlewareInterface
      */
     protected function isAllowedJumpUrlTarget(string $target): bool
     {
-        $allowed = false;
-
-        // Check if jumpurl is a valid link to a "dmailerping.gif"
-        // Make $checkPath an absolute path pointing to dmailerping.gif so it can get checked via ::isAllowedAbsPath()
-        $checkPath = Environment::getPublicPath() . '/' . ltrim($target, '/');
-
-        // Now check if $checkPath is a valid path and points to a "/dmailerping.gif"
-        if (preg_match('#/dmailerping\\.(gif|png)$#', $checkPath) && (GeneralUtility::isAllowedAbsPath($checkPath) || GeneralUtility::isValidUrl($target))) {
-            // set juHash as done for external_url in core: http://forge.typo3.org/issues/46071
-            $allowed = true;
-        } elseif (GeneralUtility::isValidUrl($target)) {
-            // if it's a valid URL, throw exception
-            throw new \Exception('direct_mail: Invalid target.', 1578347190);
+        // Only a "dmailerping.gif|png" is a valid target
+        if (!preg_match('#/dmailerping\\.(gif|png)$#', $target)) {
+            if (GeneralUtility::isValidUrl($target)) {
+                throw new \Exception('direct_mail: Invalid target.', 1578347190);
+            }
+            return false;
         }
 
-        return $allowed;
+        if (GeneralUtility::isValidUrl($target)) {
+            // absolute URL: must point to the host that received this request
+            $parts = parse_url($target);
+            $requestHost = strtolower($this->request->getUri()->getHost());
+            return in_array($parts['scheme'] ?? '', ['http', 'https'], true)
+                && strtolower($parts['host'] ?? '') === $requestHost
+                && !isset($parts['user'])
+                && !isset($parts['pass']);
+        }
+
+        // relative path inside the public directory, e.g. "typo3conf/ext/direct_mail/dmailerping.gif"
+        if (str_starts_with($target, '//') || !preg_match('#^[A-Za-z0-9_./-]+$#', $target)) {
+            return false;
+        }
+        $checkPath = Environment::getPublicPath() . '/' . ltrim($target, '/');
+        // set juHash as done for external_url in core: http://forge.typo3.org/issues/46071
+        return GeneralUtility::isAllowedAbsPath($checkPath);
     }
 }

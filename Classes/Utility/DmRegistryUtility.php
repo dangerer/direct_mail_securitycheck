@@ -37,12 +37,12 @@ class DmRegistryUtility
         /* @var \TYPO3\CMS\Core\Registry $registry */
         $registry = GeneralUtility::makeInstance(Registry::class);
         $registeredAccessToken = $registry->get('tx_directmail', 'accessToken');
-        if (!empty($registeredAccessToken) && $registeredAccessToken === $accessToken) {
+        // only a matching token is consumed, a wrong guess must not invalidate the token of someone else
+        if (!empty($registeredAccessToken) && $accessToken !== '' && hash_equals((string)$registeredAccessToken, $accessToken)) {
             $registry->remove('tx_directmail', 'accessToken');
             return true;
         }
 
-        $registry->remove('tx_directmail', 'accessToken');
         return false;
     }
 }

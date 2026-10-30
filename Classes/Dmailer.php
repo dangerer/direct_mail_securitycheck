@@ -236,7 +236,7 @@ class Dmailer implements LoggerAwareInterface
         }
 
         //$this->encoding          = $row['encoding'];
-        $this->theParts          = unserialize(base64_decode($row['mailContent']));
+        $this->theParts          = unserialize(base64_decode($row['mailContent']), ['allowed_classes' => false]);
         $this->messageid         = $this->theParts['messageid'];
         $this->subject           = $this->ensureCorrectEncoding($row['subject']);
         $this->fromEmail         = $row['from_email'];
@@ -754,7 +754,7 @@ class Dmailer implements LoggerAwareInterface
                 $this->getLanguageService()->sL('LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:dmailer_sys_dmail_record') . ' ' . $row['uid'] . ', \'' . $row['subject'] . '\'' . $this->getLanguageService()->sL('LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:dmailer_processed')
             );
             $this->prepare($row);
-            $query_info = unserialize($row['query_info']);
+            $query_info = unserialize($row['query_info'], ['allowed_classes' => false]);
 
             if (!$row['scheduled_begin']) {
                 // Hook to alter the list of recipients
@@ -1270,9 +1270,9 @@ class Dmailer implements LoggerAwareInterface
                 // Fetches the attributes for the tag
                 $attributes = $this->get_tag_attributes($reg[0]);
                 $info[] = [
-                    'src' => $attributes['src'],
-                    'name' => $attributes['name'],
-                    'absRef' => $this->absRef($frame['src']),
+                    'src' => $attributes['src'] ?? '',
+                    'name' => $attributes['name'] ?? '',
+                    'absRef' => $this->absRef($attributes['src'] ?? ''),
                 ];
             }
 

@@ -64,6 +64,7 @@ final class MailerEngineController extends MainController
         $this->currentPageNumber = (int)($queryParams['currentPageNumber'] ?? 1);
         $this->currentPageNumber = $this->currentPageNumber > 0 ? $this->currentPageNumber : 1;
         $permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->perms_clause = $permsClause;
         $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
         $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
         $this->access = is_array($this->pageinfo) ? true : false;
@@ -257,6 +258,9 @@ final class MailerEngineController extends MainController
     protected function deleteDMail(int $uid): void
     {
         $table = 'sys_dmail';
+        if (!$this->getBackendUser()->check('tables_modify', $table) || $this->getAccessibleRecord($table, $uid) === []) {
+            return;
+        }
         if ($GLOBALS['TCA'][$table]['ctrl']['delete']) {
             $done = GeneralUtility::makeInstance(SysDmailRepository::class)->updateSysDmailRecord($uid, [$GLOBALS['TCA'][$table]['ctrl']['delete'] => 1]);
         }

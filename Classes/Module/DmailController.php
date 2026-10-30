@@ -123,6 +123,7 @@ final class DmailController extends MainController
         $this->updatePageTree = (bool)($parsedBody['updatePageTree'] ?? $queryParams['updatePageTree'] ?? false);
 
         $permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->perms_clause = $permsClause;
         $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
         $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
         $this->access = is_array($this->pageinfo);
@@ -261,7 +262,7 @@ final class DmailController extends MainController
 
         $row = [];
         if ((int)$this->sys_dmail_uid) {
-            $row = BackendUtility::getRecord('sys_dmail', $this->sys_dmail_uid);
+            $row = $this->getAccessibleRecord('sys_dmail', $this->sys_dmail_uid);
             $isExternalDirectMailRecord = (is_array($row) && $row['type'] == 1);
         }
 
@@ -395,7 +396,7 @@ final class DmailController extends MainController
                         $this->flashMessageQueue->addMessage($this->createFlashMessage($temp['warningText'], $temp['warningTitle'], ContextualFeedbackSeverity::WARNING, false));
                     }
 
-                    $row = BackendUtility::getRecord('sys_dmail', $this->sys_dmail_uid);
+                    $row = $this->getAccessibleRecord('sys_dmail', $this->sys_dmail_uid);
 
                     $data['info']['quickmail']['cmd'] = DmailCmdEnum::SendTest->value;
                     $data['info']['quickmail']['senderName'] = htmlspecialchars($quickmail['senderName'] ?? '');
@@ -413,7 +414,7 @@ final class DmailController extends MainController
                         $data['info']['dmail']['cmd'] = DmailCmdEnum::SendTest->value;
 
                         // add attachment here, since attachment added in 2nd step
-                        $unserializedMailContent = unserialize(base64_decode($row['mailContent'] ?: ''));
+                        $unserializedMailContent = unserialize(base64_decode($row['mailContent'] ?: ''), ['allowed_classes' => false]);
                         $temp = $this->compileQuickMail($row, $unserializedMailContent['plain']['content'] ?? '', false);
                         if ($temp['errorTitle']) {
                             $this->flashMessageQueue->addMessage($this->createFlashMessage($temp['errorText'], $temp['errorTitle'], ContextualFeedbackSeverity::ERROR, false));
@@ -948,6 +949,9 @@ final class DmailController extends MainController
     protected function deleteDMail(int $uid): void
     {
         $table = 'sys_dmail';
+        if (!$this->getBackendUser()->check('tables_modify', $table) || $this->getAccessibleRecord($table, $uid) === []) {
+            return;
+        }
         if ($GLOBALS['TCA'][$table]['ctrl']['delete']) {
             GeneralUtility::makeInstance(SysDmailRepository::class)->updateSysDmailRecord($uid, [$GLOBALS['TCA'][$table]['ctrl']['delete'] => 1]);
         }
@@ -1831,9 +1835,9 @@ final class DmailController extends MainController
                 $output['rows'][] = [
                     'uid' => $row['uid'],
                     'icon' => $this->iconFactory->getIconForRecord('tt_content', $row, IconSize::SMALL),
-                    'header' => $row['header'],
+                    'header' => htmlspecialchars((string)$row['header']),
                     'CType' => $row['CType'],
-                    'bodytext' => empty($row['bodytext']) ? '' : GeneralUtility::fixed_lgd_cs(strip_tags($row['bodytext']), 200),
+                    'bodytext' => empty($row['bodytext']) ? '' : htmlspecialchars(GeneralUtility::fixed_lgd_cs(strip_tags($row['bodytext']), 200)),
                     'color' => $row['module_sys_dmail_category'] ? 'red' : 'green',
                     'labelOnlyAll' => $row['module_sys_dmail_category'] ? $this->languageService->sL($this->lllFile . ':nl_l_ONLY') : $this->languageService->sL($this->lllFile . ':nl_l_ALL'),
                     'checkboxes' => $cboxes,

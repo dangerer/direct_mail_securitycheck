@@ -230,7 +230,7 @@
 								<f:for each="{formcontent.output.mapping.table}" iteration="iterator" as="row">
 									<tr class="db_list_normal">
 										<td nowrap="">{iterator.cycle}</td>
-										<td nowrap=""><f:format.raw>{row.mapping_description}</f:format.raw></td>
+										<td nowrap="">{row.mapping_description}</td>
 										<td nowrap="">
 											<f:if condition="{formcontent.output.mapping.fields -> f:count()}">
 												<select name="CSV_IMPORT[map][{row.mapping_i}]" class="form-select form-control-adapt">
@@ -246,7 +246,7 @@
 													<f:for each="{row.mapping_value}" as="mv">
 														<tr nowrap="">
 															<td>
-																<f:format.raw>{mv}</f:format.raw>
+																{mv}
 															</td>
 														</tr>
 													</f:for>

@@ -214,6 +214,35 @@ class MainController
         return $GLOBALS['BE_USER']->isAdmin();
     }
 
+    /**
+     * Returns a record only if the backend user may read the table and the page the record lives on
+     * (page permissions and web mounts), otherwise an empty array.
+     */
+    protected function getAccessibleRecord(string $table, int $uid): array
+    {
+        if ($uid <= 0 || !isset($GLOBALS['TCA'][$table])) {
+            return [];
+        }
+        $row = BackendUtility::getRecord($table, $uid);
+        if (!is_array($row) || !$this->canReadRecord($table, $row)) {
+            return [];
+        }
+        return $row;
+    }
+
+    protected function canReadRecord(string $table, array $row): bool
+    {
+        $backendUser = $this->getBackendUser();
+        if (!$backendUser->check('tables_select', $table)) {
+            return false;
+        }
+        $pid = (int)($row['pid'] ?? 0);
+        if ($pid === 0) {
+            return $backendUser->isAdmin();
+        }
+        return is_array(BackendUtility::readPageAccess($pid, $backendUser->getPagePermsClause(Permission::PAGE_SHOW)));
+    }
+
     protected function getTSConfig()
     {
         return $GLOBALS['BE_USER']->getTSConfig();

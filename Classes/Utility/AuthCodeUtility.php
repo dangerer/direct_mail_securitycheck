@@ -10,6 +10,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class AuthCodeUtility
 {
     /**
+     * Additional secret for HashService::hmac(). The actual key material is the TYPO3 encryptionKey,
+     * which HashService mixes in itself. The value must not change, otherwise the auth codes
+     * in already sent mails would become invalid.
+     */
+    protected const HMAC_ADDITIONAL_SECRET = 'changeMe';
+
+    /**
      * check if the supplied auth code is identical with the counted authCode
      *
      * @param string $submittedAuthCode
@@ -24,7 +31,7 @@ class AuthCodeUtility
     {
         if (!empty($submittedAuthCode)) {
             $hmac = self::getHmac($recipientRecord, $authcodeFieldList);
-            if ($submittedAuthCode === $hmac) {
+            if (hash_equals($hmac, $submittedAuthCode)) {
                 return true;
             }
         }
@@ -44,6 +51,6 @@ class AuthCodeUtility
         }
         $preKey = implode('|', $recCopy_temp);
 
-        return GeneralUtility::makeInstance(HashService::class)->hmac($preKey, 'changeMe');
+        return GeneralUtility::makeInstance(HashService::class)->hmac($preKey, self::HMAC_ADDITIONAL_SECRET);
     }
 }

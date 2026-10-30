@@ -6,6 +6,7 @@ namespace DirectMailTeam\DirectMail\Utility;
 
 use DirectMailTeam\DirectMail\Repository\PagesRepository;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class TsUtility
@@ -41,8 +42,8 @@ class TsUtility
      * $TSconfPrefix, for the page, then sets those values which were not present.
      * $impParams can be supplied as already known Page TSconfig, otherwise it's calculated.
      *
-     * THIS DOES NOT CHECK ANY PERMISSIONS. SHOULD IT?
-     * More documentation is needed.
+     * The current backend user needs to be allowed to edit the page,
+     * and the keys of $pageTs may only consist of plain property name characters.
      *
      * @param int $id Page id
      * @param array $pageTs Page TS array to write
@@ -54,10 +55,14 @@ class TsUtility
     public function updatePagesTSconfig(int $id, array $pageTs, string $tsConfPrefix): bool
     {
         $done = false;
-        if (is_array($pageTs) && $id > 0) {
+        if (is_array($pageTs) && $id > 0 && $this->canEditPageTsconfig($id)) {
             $impParams = $this->implodeTSParams(BackendUtility::getPagesTSconfig($id));
             $set = [];
             foreach ($pageTs as $f => $v) {
+                // a key containing line breaks or other characters could inject further TSconfig lines
+                if (!is_string($v) || !preg_match('/^[A-Za-z0-9_.-]+$/', (string)$f)) {
+                    continue;
+                }
                 // only get the first line of input and ignore the rest
                 $v = strtok(trim($v), "\r\n");
                 // if token is not found (false)
@@ -101,5 +106,15 @@ class TsUtility
         }
 
         return $done;
+    }
+
+    protected function canEditPageTsconfig(int $id): bool
+    {
+        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        if ($backendUser === null) {
+            return false;
+        }
+        $pageRecord = BackendUtility::getRecord('pages', $id);
+        return is_array($pageRecord) && $backendUser->doesUserHaveAccess($pageRecord, Permission::PAGE_EDIT);
     }
 }

@@ -87,6 +87,7 @@ final class RecipientListController extends MainController
 
         $this->id = (int)($parsedBody['id'] ?? $this->queryParams['id'] ?? 0);
         $permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->perms_clause = $permsClause;
         $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
         $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
         $this->access = is_array($this->pageinfo) ? true : false;
@@ -453,8 +454,7 @@ final class RecipientListController extends MainController
     protected function displayMailGroup(array $result): array
     {
         $idLists = $result['queryInfo']['id_lists'];
-        $group = BackendUtility::getRecord('sys_dmail_group', $this->group_uid);
-        $group = is_array($group) ? $group : [];
+        $group = $this->getAccessibleRecord('sys_dmail_group', $this->group_uid);
         $data = [
             'queryLimitDisabled' => $group['queryLimitDisabled'] ?? true,
             'group_id' => $this->group_uid,
@@ -776,7 +776,11 @@ final class RecipientListController extends MainController
         }
 
         $row = $rows[0] ?? [];
+        if ($row !== [] && !$this->canReadRecord($this->table, $row)) {
+            $row = [];
+        }
 
+        $dataout = [];
         if (is_array($row) && count($row)) {
             $mmTable = $GLOBALS['TCA'][$this->table]['columns']['module_sys_dmail_category']['config']['MM'];
             $resCat = GeneralUtility::makeInstance(TempRepository::class)->getDisplayUserInfo((string)$mmTable, (int)$row['uid']);

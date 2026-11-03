@@ -1,5 +1,6 @@
 # Direct Mail
 
+
 The »Direct Mail« extension implements an advanced newsletter mailer system for the [TYPO3 CMS](https://typo3.org). This extension provides not only a system for sending a newsletter from TYPO3 CMS, but also personalizing it and collect some statistics.
 
 The extension builds a newsletter based on a TYPO3 page, so that you can create newsletter layout the same way you create a website layout. It also lets editors select between different recipient groups for each newsletter.

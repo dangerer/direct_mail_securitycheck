@@ -53,6 +53,7 @@ final class DmailController extends MainController
 {
 
     protected FlashMessageQueue $flashMessageQueue;
+    protected ServerRequestInterface $request;
 
     public function __construct(
         protected readonly ModuleTemplateFactory $moduleTemplateFactory,
@@ -108,6 +109,7 @@ final class DmailController extends MainController
 
     public function handleRequest(ServerRequestInterface $request): ResponseInterface
     {
+        $this->request = $request;
         $this->languageService = $this->getLanguageService();
         $this->flashMessageQueue = $this->getFlashMessageQueue('DmailQueue');
 
